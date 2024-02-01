@@ -1,8 +1,7 @@
 ---
 title: "Introduction to Air Quality Data Analysis"
-#output: html_notebook
-editor_options: 
-  markdown: 
+editor_options:
+  markdown:
     wrap: 72
 ---
 
@@ -39,7 +38,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE)
 
 ```{r}
 # Load data frame
-load("./data/roxbury_df_filtered.RData")
+load("./data/roxbury_df_filtered.rdata")
 
 
 ```
@@ -48,7 +47,7 @@ load("./data/roxbury_df_filtered.RData")
 ```{r}
 # Choose a single sensor - change the SN to choose your sensor. Your individual dataframe will be called 'my_df,' which you can call later for plotting functions
 my_df <- mod_met_filtered %>% 
-      filter(mod_met_filtered$sn == 'MOD-PM-00222')
+      filter(mod_met_filtered$sn == 'MOD-00024')
 
 
 ###Below are different permutations of sensor groupings that you can use to analyze data together. For example, the sensors around Nubian Station are: MOD-00024, MOD-00028, MOD-PM-00222, and MOD-00025. Instead of filtering by a single SN, you'll filter by a vector of SNs (c('MOD-00024', 'MOD-00028', 'MOD-PM-00222', 'MOD-00025')).
@@ -106,6 +105,8 @@ co_threshold <- 5000
 o3_threshold <- 200
 ws_threshold <- 10
 
+pollutants <- c('pm10', 'pm25', 'pm1', 'no', 'no2', 'co', 'o3')
+
 ```
 
 # Replace values above threshold defined above, filter values below zero
@@ -162,9 +163,9 @@ my_df$date <- as.POSIXct(strptime(my_df$timestamp_local.x, format = "%Y-%m-%d %H
 # Do you need to do additional cleaning, or do things look good?
 
 
-timePlot(my_df, pollutant = "pm1")
+#timePlot(my_df, pollutant = "pm1")
 
-#timePlot(aq_df, pollutant = c("co", "o3", "no", "no2", "pm1", "pm25", "pm10"), y.relation= "free")
+timePlot(my_df, pollutant = c("co", "o3", "no", "no2", "pm1", "pm25", "pm10"), y.relation= "free")
 #timePlot(aq_df, pollutant = c("co", "o3", "no", "no2"), y.relation= "free"). #error? does your sensor have gas-phase data or PM only? 
 #timePlot(aq_df, pollutant = c("pm1", "pm25", "pm10"), y.relation= "free")
 
@@ -183,7 +184,7 @@ timePlot(my_df, pollutant = "pm1")
 
 
 # Basic diurnal plots:
-#timeVariation(my_df, pollutant = c("no", "no2", "co"), local.tz= "America/New_York", normalise = TRUE) #error? does your sensor have gas-phase data, or PM only?
+timeVariation(my_df, pollutant = c("no", "no2", "co"), local.tz= "America/New_York", normalise = TRUE) #error? does your sensor have gas-phase data, or PM only?
 timeVariation(my_df, pollutant = c("pm1", "pm25", "pm10"), normalise = TRUE, local.tz= "America/New_York") 
 
 # If you want to select by certain months:
@@ -204,16 +205,16 @@ timeVariation(my_df, pollutant = c("pm1", "pm25", "pm10"), normalise = TRUE, loc
 
 # There are a bunch of different things you can define here - type (seasonal, etc), statistic (median, mean, max, standard deviation, etc), color scale limits, icon size, figure transparency, etc. In particular, the type and statistic inputs give you *very* different pictures of what's happening in an environment.
 
-polarPlot(my_df, pollutant = "pm1")
-polarPlot(my_df, pollutant = "pm1", type = "season")
-polarPlot(my_df, pollutant = "pm1", limits = c(0,6), type = "season")
-polarFreq(my_df, pollutant = "pm1")
-pollutionRose(my_df, pollutant = "pm1")
-polarAnnulus(my_df, pollutant = "pm1")
-polarCluster(my_df, pollutant = "pm1", n.clusters = 4)
 
-
-
+for (p in pollutants) {
+  polarPlot(my_df, pollutant = p, main=p)
+  polarPlot(my_df, pollutant = p, type = "season",  main=p)
+  polarPlot(my_df, pollutant = p, limits = c(0,6), type = "season",  main=p)
+  polarFreq(my_df, pollutant = p,  main=p)
+  pollutionRose(my_df, pollutant = p,  main=p)
+  polarAnnulus(my_df, pollutant = p,  main=p)
+  polarCluster(my_df, pollutant = p, n.clusters = 4,  main=p)
+}
 
 ```
 
@@ -223,36 +224,16 @@ polarCluster(my_df, pollutant = "pm1", n.clusters = 4)
 #polarMap is an extension of polarPlot that places a polarPlot onto a map as an overlay. polarPlot is in a family of plots that include pollutionRose, polarAnnulus, polarFreq, percentileRose, and others that give slightly different visualizations of the same combined pollutant/met data. You should play with some of these too.
 
 # There are a bunch of different things you can define here - type (seasonal, etc), statistic (median, mean, max, standard deviation, etc), color scale limits, icon size, figure transparency, etc. In particular, the type and statistic inputs give you *very* different pictures of what's happening in an environment.
-
-polarMap(my_df,
-         pollutant = "pm1", 
-         key.position = "bottom",
-         key.header = "PM1 (ug/m3)", 
-         key.footer = NULL, 
-         x = "ws",
-         latitude = "lat",
-         longitude = "lon", 
-         provider = "OpenStreetMap",
-         cols = "jet",
-         alpha = 0.8,
-         key = TRUE,
-         iconWidth = 200,
-         iconHeight = 200,
-         fig.width = 4,
-         fig.height = 4
-         )
-
-
+# 
 # polarMap(my_df,
-#          pollutant = "no", 
+#          pollutant = "pm1", 
 #          key.position = "bottom",
-#          key.header = "NO (ppb)", 
+#          key.header = "PM1 (ug/m3)", 
 #          key.footer = NULL, 
 #          x = "ws",
 #          latitude = "lat",
 #          longitude = "lon", 
 #          provider = "OpenStreetMap",
-#          limits = c(0, 4),
 #          cols = "jet",
 #          alpha = 0.8,
 #          key = TRUE,
@@ -262,16 +243,38 @@ polarMap(my_df,
 #          fig.height = 4
 #          )
 # 
+
+for (p in pollutants){
+  polarMap(my_df,
+           pollutant = p,
+           key.position = "bottom",
+           key.header = p,
+           key.footer = NULL,
+           x = "ws",
+           latitude = "lat",
+           longitude = "lon",
+           provider = "OpenStreetMap",
+           limits = c(0, 4),
+           cols = "jet",
+           alpha = 0.8,
+           key = TRUE,
+           iconWidth = 200,
+           iconHeight = 200,
+           fig.width = 4,
+           fig.height = 4
+           )
+}
+# 
 # 
 # polarMap(my_df,
-#          pollutant = "no", 
+#          pollutant = "no",
 #          key.position = "bottom",
-#          key.header = "NO (ppb)", 
+#          key.header = "NO (ppb)",
 #          x = "ws",
 #          latitude = "lat",
-#          longitude = "lon", 
+#          longitude = "lon",
 #          provider = "OpenStreetMap",
-#          limits = c(0, 4),
+#          limits = c(0, 10),
 #          cols = "jet",
 #          key = TRUE,
 #          )
@@ -283,14 +286,15 @@ polarMap(my_df,
 ```{r}
 # These can help identify specific dates or ranges of dates that had particularly high pollutant concentrations. You may want to look more closely at conspicuously elevated pollutant days.
 
-calendarPlot(my_df, pollutant = "pm10")
+for (p in pollutants) {
+  calendarPlot(my_df, pollutant = "pm10", main = p)
+  trendLevel(my_df, pollutant = "pm10", limits = c(0,20), main=p)
+}
+
 # calendarPlot(my_df, pollutant = "pm10", limits = c(0,80))
 # 
 # 
-# calendarPlot(my_df, pollutant = "pm10", annotate = "value", limits = c(0,80),
-# lim =50, cols = "Purples", col.lim = c("black", "orange"), layout = c(4, 3))
-# 
-# trendLevel(my_df, pollutant = "pm10", limits = c(0,20))
+calendarPlot(my_df, pollutant = "pm10", annotate = "value", limits = c(0,80), lim =50, cols = "Purples", col.lim = c("black", "orange"), layout = c(4, 3))
 
 
 ```
